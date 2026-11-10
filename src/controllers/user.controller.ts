@@ -7,6 +7,7 @@ import {
   updateUser,
   loginUser,
 } from "../services/user.service.js";
+import { CreateUserSchema } from "../models/user.model.js";
 
 export async function getUsersController(
   req: Request,
@@ -40,8 +41,17 @@ export async function createUserController(
   res: Response
 ) {
   try {
-    const { name, email, password } = req.body;
-    validateUser(name, email,password)
+    const result = CreateUserSchema.safeParse(req.body);
+
+    if (!result.success) {
+      return res.status(422).json({
+        message: "Validation failed",
+        errors: result.error.issues,
+      });
+    }
+
+    const { name, email, password } = result.data;
+    
     const user = await createUser(name, email, password);
     
     res.status(201).json(user);
